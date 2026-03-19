@@ -271,8 +271,8 @@ function getDoses(dateObj) {
   const cycleLength = ns ? Math.round((ns.getTime()-cs.getTime())/86400000) : 28;
   const daysToNext = cycleLength - cycleDay;
 
-  // P: last 15 days of cycle (daysToNext 0-14)
-  const pMap = {0:4,1:8,2:8,3:10,4:10,5:12,6:14,7:12,8:10,9:10,10:8,11:8,12:4,13:4,14:4};
+  // P: last 15 days of cycle
+  const pMap = {14:4,13:4,12:8,11:8,10:10,9:10,8:12,7:14,6:12,5:10,4:10,3:8,2:8,1:4,0:4};
   const pDose = pMap.hasOwnProperty(daysToNext) ? pMap[daysToNext] : 0;
 
   // E: anchored backwards from next full moon
@@ -281,9 +281,8 @@ function getDoses(dateObj) {
   else if (daysToNext >= 20) eDose = 6;
   else if (daysToNext >= 17) eDose = 7;
   else if (daysToNext === 16) eDose = 8;
-  else if (daysToNext === 15) eDose = 2;
-  else if (daysToNext >= 13) eDose = 2;
-  else if (daysToNext >= 10) eDose = 3;
+  else if (daysToNext >= 14) eDose = 2;
+  else if (daysToNext >= 11) eDose = 3;
   else                       eDose = 4;
 
   return {cycleDay, cycleLength, eDose, pDose, isFullMoonDay: elapsed===0, nextCycleStart: ns};
