@@ -3,263 +3,499 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Wiley Protocol</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+<title>Cyclical BHRT Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --ink: #1a1520;
-    --parchment: #f5f0e8;
-    --silver: #3d3530;
-    --mid: #5a4e47;
-    --accent: #5a3d5a;
-    --accent-light: #7a5a7a;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: var(--ink);
-    min-height: 100vh;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    font-family: 'Cormorant Garamond', serif;
-    padding: 40px 0 60px;
-    position: relative;
-  }
-  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-  .star {
-    position: absolute; background: white; border-radius: 50%;
-    animation: twinkle var(--d) ease-in-out infinite alternate; opacity: var(--o);
-  }
-  @keyframes twinkle {
-    from { opacity: var(--o); transform: scale(1); }
-    to { opacity: calc(var(--o) * 0.3); transform: scale(0.7); }
-  }
-  .moon-bg {
-    position: fixed; top: -120px; right: -80px; width: 350px; height: 350px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(232,223,200,0.12) 0%, rgba(200,191,176,0.05) 50%, transparent 70%);
-    pointer-events: none; z-index: 0;
-  }
-  .card {
-    position: relative; z-index: 10;
-    background: linear-gradient(160deg, rgba(245,240,232,0.97) 0%, rgba(232,223,200,0.95) 100%);
-    border-radius: 2px; width: min(380px, 95vw);
-    padding: 48px 40px 44px;
-    box-shadow: 0 0 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,191,176,0.3);
-    text-align: center; animation: fadeUp 0.8s ease both;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .moon-phase {
-    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 9px;
-    letter-spacing: 0.35em; text-transform: uppercase; color: #c8bb98;
-    background: var(--ink); padding: 5px 16px; border-radius: 1px; white-space: nowrap;
-  }
+:root {
+  --bg: #ffffff;
+  --card: #f8f8f8;
+  --ink: #1a1a2e;
+  --mid: #555566;
+  --e-color: #1a7a3a;
+  --e-light: #e8f5ed;
+  --e-border: #a8d8b8;
+  --p-color: #6b2fa0;
+  --p-light: #f3eafa;
+  --p-border: #c9a0e0;
+  --accent: #2a5298;
+  --accent-light: #e8eef8;
+  --red: #c0392b;
+  --border: #ddd;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.screen { display:none; min-height:100vh; flex-direction:column; }
+.screen.active { display:flex; }
 
-  /* ── Nav ── */
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-  }
-  .nav-btn {
-    background: none; border: none; cursor: pointer;
-    font-size: 18px; color: var(--mid);
-    padding: 4px 8px;
-    line-height: 1;
-    transition: color 0.15s;
-    flex: 0 0 auto;
-  }
-  .nav-btn:hover { color: var(--accent); }
-  .nav-btn:disabled { opacity: 0.2; cursor: default; }
-  .jump-today {
-    display: none;
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 8px;
-    letter-spacing: 0.28em; text-transform: uppercase;
-    color: var(--parchment); background: var(--accent);
-    border: none; border-radius: 1px; padding: 4px 10px;
-    cursor: pointer; margin: 0 auto 0; opacity: 0.9;
-    transition: opacity 0.2s;
-  }
-  .jump-today.visible { display: block; }
-  .jump-today:hover { opacity: 1; }
-  .nav-center { flex: 1; }
+/* ── Header ── */
+.header {
+  background: var(--ink);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header h1 { font-size: 18px; font-weight: 800; flex: 1; }
+.header .subtitle { font-size: 11px; opacity: 0.7; font-weight: 400; }
+.back-btn {
+  background: none; border: none; color: white;
+  font-size: 22px; cursor: pointer; padding: 0 8px 0 0;
+  font-family: inherit;
+}
 
-  .date-line {
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 10px;
-    letter-spacing: 0.3em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px;
-  }
-  .full-date {
-    font-size: 30px; font-weight: 300; color: var(--ink); line-height: 1.1; margin-bottom: 4px;
-  }
-  .cycle-day {
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 10px;
-    letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); margin-bottom: 0;
-  }
-  .today-badge {
-    display: inline-block;
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 8px;
-    letter-spacing: 0.25em; text-transform: uppercase;
-    color: var(--parchment); background: var(--accent);
-    padding: 2px 8px; border-radius: 1px; margin-left: 8px;
-    position: relative; top: -1px;
-  }
+/* ── Setup screen ── */
+.setup-body { padding: 24px 20px; flex: 1; overflow-y: auto; }
+.setup-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.setup-sub { font-size: 14px; color: var(--mid); margin-bottom: 28px; }
 
-  .divider {
-    width: 60px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--mid), transparent);
-    margin: 24px auto 24px;
-  }
-  .doses { display: flex; flex-direction: column; }
-  .dose-row {
-    display: flex; align-items: baseline; justify-content: space-between;
-    padding: 14px 0; border-bottom: 1px solid rgba(90,61,90,0.15);
-  }
-  .dose-row:first-child { border-top: 1px solid rgba(90,61,90,0.15); }
-  .hormone-label {
-    font-family: 'Josefin Sans', sans-serif; font-weight: 400; font-size: 11px;
-    letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); flex: 0 0 auto;
-  }
-  .dose-dots {
-    flex: 1; margin: 0 16px; border-bottom: 1px dotted rgba(90,61,90,0.2);
-    position: relative; top: -3px;
-  }
-  .dose-value {
-    font-size: 28px; font-weight: 300; color: var(--ink); flex: 0 0 auto;
-  }
-  .dose-unit {
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 9px;
-    letter-spacing: 0.2em; color: var(--mid); margin-left: 5px; position: relative; top: -2px;
-  }
+.option-group { margin-bottom: 24px; }
+.option-label {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--mid); margin-bottom: 10px;
+}
+.option-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.opt-btn {
+  padding: 10px 16px; border-radius: 8px; border: 2px solid var(--border);
+  background: white; font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.opt-btn:hover { border-color: var(--accent); }
+.opt-btn.selected-e { border-color: var(--e-color); background: var(--e-light); color: var(--e-color); }
+.opt-btn.selected-p { border-color: var(--p-color); background: var(--p-light); color: var(--p-color); }
+.opt-btn.selected-cal { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
 
-  .card.full-moon-day { background: linear-gradient(160deg, rgba(245,240,232,0.98) 0%, rgba(240,230,210,0.96) 100%); }
-  .full-moon-glow {
-    display: none; position: absolute; inset: -2px; border-radius: 4px;
-    background: transparent; box-shadow: 0 0 30px rgba(232,223,200,0.4), 0 0 60px rgba(200,191,176,0.15);
-    pointer-events: none; z-index: -1;
-  }
-  .card.full-moon-day .full-moon-glow { display: block; }
+.day1-picker { display:none; margin-top: 12px; }
+.day1-picker.visible { display:block; }
+.day1-picker label { font-size: 13px; font-weight: 700; color: var(--mid); display:block; margin-bottom:6px; }
+.day1-picker input[type=date] {
+  width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px;
+  font-family: inherit; font-size: 15px; font-weight: 600;
+}
 
-  .next-moon {
-    margin-top: 28px; padding-top: 18px; border-top: 1px solid rgba(90,61,90,0.15);
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 9px;
-    letter-spacing: 0.28em; text-transform: uppercase; color: var(--mid);
-  }
-  .next-moon span { color: var(--accent); font-weight: 400; }
+.start-btn {
+  width: 100%; padding: 16px; background: var(--ink); color: white;
+  border: none; border-radius: 12px; font-family: inherit; font-size: 17px;
+  font-weight: 800; cursor: pointer; margin-top: 8px; transition: opacity 0.15s;
+}
+.start-btn:hover { opacity: 0.85; }
 
-  /* ── Travel ── */
-  .travel-section { margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(90,61,90,0.2); }
-  .travel-toggle {
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 9px;
-    letter-spacing: 0.3em; text-transform: uppercase; color: var(--mid);
-    background: none; border: none; cursor: pointer; padding: 0;
-    display: flex; align-items: center; gap: 8px; margin: 0 auto; transition: color 0.2s;
-  }
-  .travel-toggle:hover { color: var(--accent); }
-  .travel-toggle .arrow { display: inline-block; transition: transform 0.25s; font-size: 8px; }
-  .travel-toggle.open .arrow { transform: rotate(90deg); }
-  .travel-form { display: none; margin-top: 18px; flex-direction: column; gap: 12px; }
-  .travel-form.visible { display: flex; }
-  .date-inputs { display: flex; gap: 10px; }
-  .date-field { flex: 1; display: flex; flex-direction: column; gap: 5px; text-align: left; }
-  .date-field label {
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 8px;
-    letter-spacing: 0.3em; text-transform: uppercase; color: var(--mid);
-  }
-  .date-field input[type="date"] {
-    background: rgba(26,21,32,0.06); border: 1px solid rgba(90,61,90,0.3);
-    border-radius: 1px; padding: 8px 10px;
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 11px;
-    color: var(--ink); width: 100%; outline: none; -webkit-appearance: none;
-  }
-  .date-field input[type="date"]:focus { border-color: rgba(90,61,90,0.6); }
-  .calc-btn {
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 9px;
-    letter-spacing: 0.3em; text-transform: uppercase; color: var(--parchment);
-    background: var(--accent); border: none; border-radius: 1px; padding: 11px 20px;
-    cursor: pointer; opacity: 0.9; transition: opacity 0.2s;
-  }
-  .calc-btn:hover { opacity: 1; }
-  .travel-result { display: none; margin-top: 4px; padding-top: 16px; border-top: 1px solid rgba(90,61,90,0.15); }
-  .travel-result.visible { display: block; }
-  .travel-result-label {
-    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 8px;
-    letter-spacing: 0.3em; text-transform: uppercase; color: var(--mid); margin-bottom: 14px;
-  }
-  .travel-dose-row {
-    display: flex; align-items: baseline; justify-content: space-between;
-    padding: 10px 0; border-bottom: 1px solid rgba(90,61,90,0.12);
-  }
-  .travel-dose-row:first-child { border-top: 1px solid rgba(90,61,90,0.12); }
-  .travel-dose-value { font-size: 22px; font-weight: 300; color: var(--ink); }
-  .travel-error { font-size: 12px; font-style: italic; color: #9b5c5c; margin-top: 8px; }
+/* ── Daily screen ── */
+.daily-body { flex: 1; overflow-y: auto; padding: 16px 20px 24px; }
+
+.date-block { text-align: center; margin-bottom: 20px; }
+.date-dow { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mid); }
+.date-main { font-size: 30px; font-weight: 800; line-height: 1.1; }
+.date-cycle { font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 4px; }
+.full-moon-badge {
+  display: inline-block; background: #1a1a2e; color: #e8dfc8;
+  font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+  margin-top: 6px; letter-spacing: 0.05em;
+}
+
+.day-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.nav-arrow {
+  width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--border);
+  background: white; font-size: 20px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; font-family: inherit;
+  transition: all 0.15s;
+}
+.nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+.today-btn {
+  font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-light);
+  border: none; border-radius: 20px; padding: 6px 14px; cursor: pointer;
+  font-family: inherit; display: none;
+}
+.today-btn.visible { display: block; }
+
+.dose-card {
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.dose-card.e-card { background: var(--e-light); border: 2px solid var(--e-border); }
+.dose-card.p-card { background: var(--p-light); border: 2px solid var(--p-border); }
+.dose-name { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.e-card .dose-name { color: var(--e-color); }
+.p-card .dose-name { color: var(--p-color); }
+.dose-level { font-size: 12px; font-weight: 600; opacity: 0.7; margin-top: 2px; }
+.dose-amount { text-align: right; }
+.dose-number { font-size: 36px; font-weight: 800; line-height: 1; }
+.e-card .dose-number { color: var(--e-color); }
+.p-card .dose-number { color: var(--p-color); }
+.dose-unit { font-size: 12px; font-weight: 600; opacity: 0.7; }
+
+.section-title {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--mid); margin: 20px 0 10px;
+}
+
+.action-row { display: flex; gap: 10px; margin-bottom: 12px; }
+.action-btn {
+  flex: 1; padding: 12px 8px; border-radius: 10px; border: 2px solid var(--border);
+  background: white; font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.action-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+.action-btn.symptoms-btn { border-color: var(--p-border); color: var(--p-color); }
+.action-btn.notes-btn { border-color: var(--e-border); color: var(--e-color); }
+.action-btn.travel-btn { border-color: var(--border); color: var(--mid); }
+.action-btn.adjust-btn { border-color: #e0a000; color: #a07000; }
+
+.next-moon {
+  background: var(--card); border-radius: 10px; padding: 12px 16px;
+  font-size: 13px; font-weight: 600; color: var(--mid); text-align: center;
+  border: 1px solid var(--border);
+}
+.next-moon span { color: var(--accent); font-weight: 800; }
+
+/* ── Symptoms screen ── */
+.symptoms-body { flex: 1; overflow-y: auto; padding: 16px 20px 24px; }
+.symptom-date { font-size: 14px; font-weight: 700; color: var(--mid); margin-bottom: 16px; text-align:center; }
+.symptom-grid { display: flex; flex-direction: column; gap: 8px; }
+.symptom-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-radius: 10px; border: 2px solid var(--border);
+  background: white; cursor: pointer; transition: all 0.15s;
+  font-size: 15px; font-weight: 600;
+}
+.symptom-item.active { border-color: var(--p-color); background: var(--p-light); color: var(--p-color); }
+.symptom-item .check { font-size: 20px; }
+.libido-toggle {
+  display: flex; gap: 8px; padding: 14px 16px; border-radius: 10px;
+  border: 2px solid var(--border); background: white;
+}
+.libido-toggle.active-low { border-color: var(--red); background: #fdecea; }
+.libido-toggle.active-high { border-color: var(--e-color); background: var(--e-light); }
+.libido-label { font-size: 15px; font-weight: 600; flex:1; }
+.libido-opts { display:flex; gap:6px; }
+.lib-btn {
+  padding: 6px 12px; border-radius: 6px; border: 2px solid var(--border);
+  background: white; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
+}
+.lib-btn.active-low { border-color:var(--red); background:#fdecea; color:var(--red); }
+.lib-btn.active-high { border-color:var(--e-color); background:var(--e-light); color:var(--e-color); }
+
+.save-symptoms-btn {
+  width:100%; margin-top:20px; padding:15px; background:var(--p-color); color:white;
+  border:none; border-radius:12px; font-family:inherit; font-size:16px; font-weight:800;
+  cursor:pointer;
+}
+
+/* ── Notes screen ── */
+.notes-body { flex:1; display:flex; flex-direction:column; padding:16px 20px; }
+.notes-date { font-size:14px; font-weight:700; color:var(--mid); margin-bottom:12px; text-align:center; }
+.notes-area {
+  flex:1; width:100%; padding:16px; border:2px solid var(--border); border-radius:12px;
+  font-family:inherit; font-size:15px; font-weight:600; resize:none; min-height:200px;
+  line-height:1.6;
+}
+.notes-area:focus { outline:none; border-color:var(--e-color); }
+.save-notes-btn {
+  width:100%; margin-top:12px; padding:15px; background:var(--e-color); color:white;
+  border:none; border-radius:12px; font-family:inherit; font-size:16px; font-weight:800;
+  cursor:pointer;
+}
+
+/* ── Travel screen ── */
+.travel-body { flex:1; overflow-y:auto; padding:16px 20px 24px; }
+.travel-fields { display:flex; gap:10px; margin-bottom:14px; }
+.travel-field { flex:1; }
+.travel-field label { font-size:12px; font-weight:700; color:var(--mid); display:block; margin-bottom:5px; text-transform:uppercase; }
+.travel-field input[type=date] {
+  width:100%; padding:11px; border:2px solid var(--border); border-radius:8px;
+  font-family:inherit; font-size:14px; font-weight:600;
+}
+.calc-travel-btn {
+  width:100%; padding:14px; background:var(--accent); color:white;
+  border:none; border-radius:10px; font-family:inherit; font-size:15px; font-weight:800;
+  cursor:pointer; margin-bottom:16px;
+}
+.travel-result { display:none; }
+.travel-result.visible { display:block; }
+.travel-result-label { font-size:13px; font-weight:700; color:var(--mid); margin-bottom:10px; text-align:center; }
+.travel-dose-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; border-radius:10px; margin-bottom:8px;
+}
+.travel-dose-row.e-row { background:var(--e-light); border:2px solid var(--e-border); }
+.travel-dose-row.p-row { background:var(--p-light); border:2px solid var(--p-border); }
+.travel-label { font-size:14px; font-weight:700; }
+.e-row .travel-label { color:var(--e-color); }
+.p-row .travel-label { color:var(--p-color); }
+.travel-total { font-size:28px; font-weight:800; }
+.e-row .travel-total { color:var(--e-color); }
+.p-row .travel-total { color:var(--p-color); }
+.travel-unit { font-size:12px; font-weight:600; opacity:0.7; }
+
+/* ── Adjust screen ── */
+.adjust-body { flex:1; overflow-y:auto; padding:16px 20px 24px; }
+.adjust-info { font-size:14px; font-weight:600; color:var(--mid); margin-bottom:20px; line-height:1.5; }
+.adjust-group { margin-bottom:20px; }
+.adjust-group-label { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
+.adjust-group-label.e-label { color:var(--e-color); }
+.adjust-group-label.p-label { color:var(--p-color); }
+.adjust-opts { display:flex; gap:8px; flex-wrap:wrap; }
+.adj-btn {
+  padding:10px 14px; border-radius:8px; border:2px solid var(--border);
+  background:white; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;
+}
+.adj-btn.selected-e { border-color:var(--e-color); background:var(--e-light); color:var(--e-color); }
+.adj-btn.selected-p { border-color:var(--p-color); background:var(--p-light); color:var(--p-color); }
+.apply-adjust-btn {
+  width:100%; padding:15px; background:#a07000; color:white;
+  border:none; border-radius:12px; font-family:inherit; font-size:16px; font-weight:800;
+  cursor:pointer; margin-top:8px;
+}
+
+/* ── Patterns screen ── */
+.patterns-body { flex:1; overflow-y:auto; padding:16px 20px 24px; }
+.pattern-card {
+  background:var(--card); border-radius:10px; padding:14px 16px;
+  margin-bottom:10px; border:1px solid var(--border);
+}
+.pattern-symptom { font-size:15px; font-weight:800; margin-bottom:6px; }
+.pattern-days { font-size:13px; font-weight:600; color:var(--mid); }
+.no-patterns { text-align:center; padding:40px 20px; color:var(--mid); font-size:15px; font-weight:600; }
 </style>
 </head>
 <body>
-<div class="stars" id="stars"></div>
-<div class="moon-bg"></div>
 
-<div class="card" id="card">
-  <div class="full-moon-glow"></div>
-  <div class="moon-phase" id="moonPhaseLabel">Wiley Protocol</div>
-
-  <div class="nav">
-    <button class="nav-btn" id="prevBtn" onclick="shiftDay(-1)">&#8592;</button>
-    <div class="nav-center">
-      <div class="date-line" id="dayOfWeek">—</div>
-      <div class="full-date" id="fullDate">—</div>
-      <div class="cycle-day" id="cycleDayLabel">—</div>
+<!-- ══ SETUP SCREEN ══ -->
+<div class="screen active" id="screenSetup">
+  <div class="header">
+    <div>
+      <h1>Cyclical BHRT Tracker</h1>
+      <div class="subtitle">Personalized hormone dose calendar</div>
     </div>
-    <button class="nav-btn" id="nextBtn" onclick="shiftDay(1)">&#8594;</button>
   </div>
+  <div class="setup-body">
+    <div class="setup-title">Welcome</div>
+    <div class="setup-sub">Set your protocol once. Update anytime in Settings.</div>
 
-  <div class="divider"></div>
-  <button class="jump-today" id="jumpToday" onclick="jumpToday()">↩ back to today</button>
-  <div class="doses" id="dosesContainer"></div>
-  <div class="next-moon" id="nextMoonInfo"></div>
+    <div class="option-group">
+      <div class="option-label" style="color:var(--e-color)">Estradiol Level</div>
+      <div class="option-row" id="eOpts"></div>
+    </div>
 
-  <div class="travel-section">
-    <button class="travel-toggle" id="travelToggle" onclick="toggleTravel()">
-      <span class="arrow">▶</span> Travel calculator
-    </button>
-    <div class="travel-form" id="travelForm">
-      <div class="date-inputs">
-        <div class="date-field"><label>Depart</label><input type="date" id="departDate"></div>
-        <div class="date-field"><label>Return</label><input type="date" id="returnDate"></div>
+    <div class="option-group">
+      <div class="option-label" style="color:var(--p-color)">Progesterone Level</div>
+      <div class="option-row" id="pOpts"></div>
+    </div>
+
+    <div class="option-group">
+      <div class="option-label">Calendar Type</div>
+      <div class="option-row">
+        <button class="opt-btn" data-cal="lunar" onclick="selectCal('lunar')">🌕 Lunar</button>
+        <button class="opt-btn" data-cal="28day" onclick="selectCal('28day')">📅 28-Day</button>
       </div>
-      <button class="calc-btn" onclick="calcTravel()">Calculate</button>
-      <div class="travel-result" id="travelResult">
-        <div class="travel-result-label" id="travelDayCount"></div>
-        <div id="travelDoses"></div>
+    </div>
+
+    <div class="day1-picker" id="day1Picker">
+      <label>Choose your Day 1</label>
+      <input type="date" id="day1Input">
+    </div>
+
+    <div style="height:20px"></div>
+    <button class="start-btn" onclick="startApp()">Start Tracking →</button>
+  </div>
+</div>
+
+<!-- ══ DAILY SCREEN ══ -->
+<div class="screen" id="screenDaily">
+  <div class="header">
+    <div style="flex:1">
+      <h1 id="headerTitle">BHRT Tracker</h1>
+      <div class="subtitle" id="headerSub"></div>
+    </div>
+    <button class="back-btn" onclick="goSetup()" title="Settings">⚙️</button>
+  </div>
+  <div class="daily-body">
+    <div class="day-nav">
+      <button class="nav-arrow" onclick="shiftDay(-1)">←</button>
+      <button class="today-btn" id="todayBtn" onclick="jumpToday()">↩ today</button>
+      <button class="nav-arrow" onclick="shiftDay(1)">→</button>
+    </div>
+
+    <div class="date-block">
+      <div class="date-dow" id="dateDow"></div>
+      <div class="date-main" id="dateMain"></div>
+      <div class="date-cycle" id="dateCycle"></div>
+      <div id="moonBadge"></div>
+    </div>
+
+    <div class="dose-card e-card">
+      <div>
+        <div class="dose-name">Estradiol</div>
+        <div class="dose-level" id="eLevelLabel"></div>
+      </div>
+      <div class="dose-amount">
+        <div class="dose-number" id="eDisplay">—</div>
+        <div class="dose-unit">lines</div>
+      </div>
+    </div>
+
+    <div class="dose-card p-card" id="pCard">
+      <div>
+        <div class="dose-name">Progesterone</div>
+        <div class="dose-level" id="pLevelLabel"></div>
+      </div>
+      <div class="dose-amount">
+        <div class="dose-number" id="pDisplay">—</div>
+        <div class="dose-unit">lines</div>
+      </div>
+    </div>
+
+    <div class="section-title">Today</div>
+    <div class="action-row">
+      <button class="action-btn symptoms-btn" onclick="goSymptoms()">💜 Symptoms</button>
+      <button class="action-btn notes-btn" onclick="goNotes()">📝 Notes</button>
+    </div>
+    <div class="action-row">
+      <button class="action-btn travel-btn" onclick="goTravel()">✈️ Travel Calc</button>
+      <button class="action-btn adjust-btn" onclick="goAdjust()">⚡ Adjust Dose</button>
+    </div>
+    <button class="action-btn" style="width:100%;margin-bottom:12px;border-color:#888;color:#555" onclick="goPatterns()">📊 Symptom Patterns</button>
+
+    <div class="next-moon" id="nextMoonInfo"></div>
+  </div>
+</div>
+
+<!-- ══ SYMPTOMS SCREEN ══ -->
+<div class="screen" id="screenSymptoms">
+  <div class="header">
+    <button class="back-btn" onclick="goBack('screenDaily')">←</button>
+    <div><h1>Symptoms</h1><div class="subtitle" id="symptomDateLabel"></div></div>
+  </div>
+  <div class="symptoms-body">
+    <div class="symptom-grid" id="symptomGrid"></div>
+    <button class="save-symptoms-btn" onclick="saveSymptoms()">Save & Return</button>
+  </div>
+</div>
+
+<!-- ══ NOTES SCREEN ══ -->
+<div class="screen" id="screenNotes">
+  <div class="header">
+    <button class="back-btn" onclick="goBack('screenDaily')">←</button>
+    <div><h1>Notes</h1><div class="subtitle" id="notesDateLabel"></div></div>
+  </div>
+  <div class="notes-body">
+    <textarea class="notes-area" id="notesArea" placeholder="Write anything about today — how you feel, observations, questions for your doctor..."></textarea>
+    <button class="save-notes-btn" onclick="saveNotes()">Save & Return</button>
+  </div>
+</div>
+
+<!-- ══ TRAVEL SCREEN ══ -->
+<div class="screen" id="screenTravel">
+  <div class="header">
+    <button class="back-btn" onclick="goBack('screenDaily')">←</button>
+    <div><h1>Travel Calculator</h1></div>
+  </div>
+  <div class="travel-body">
+    <div class="travel-fields">
+      <div class="travel-field"><label>Depart</label><input type="date" id="travelDepart"></div>
+      <div class="travel-field"><label>Return</label><input type="date" id="travelReturn"></div>
+    </div>
+    <button class="calc-travel-btn" onclick="calcTravel()">Calculate</button>
+    <div class="travel-result" id="travelResult">
+      <div class="travel-result-label" id="travelLabel"></div>
+      <div class="travel-dose-row e-row">
+        <div class="travel-label">Estradiol</div>
+        <div><span class="travel-total" id="travelE">—</span> <span class="travel-unit">lines total</span></div>
+      </div>
+      <div class="travel-dose-row p-row">
+        <div class="travel-label">Progesterone</div>
+        <div><span class="travel-total" id="travelP">—</span> <span class="travel-unit">lines total</span></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ══ ADJUST SCREEN ══ -->
+<div class="screen" id="screenAdjust">
+  <div class="header">
+    <button class="back-btn" onclick="goBack('screenDaily')">←</button>
+    <div><h1>Adjust Dose</h1><div class="subtitle">From today forward</div></div>
+  </div>
+  <div class="adjust-body">
+    <div class="adjust-info">Changing your level shifts the entire remaining curve up or down. Your doctor should guide any changes.</div>
+    <div class="adjust-group">
+      <div class="adjust-group-label e-label">Estradiol Level</div>
+      <div class="adjust-opts" id="adjEOpts"></div>
+    </div>
+    <div class="adjust-group">
+      <div class="adjust-group-label p-label">Progesterone Level</div>
+      <div class="adjust-opts" id="adjPOpts"></div>
+    </div>
+    <button class="apply-adjust-btn" onclick="applyAdjust()">Apply Changes →</button>
+  </div>
+</div>
+
+<!-- ══ PATTERNS SCREEN ══ -->
+<div class="screen" id="screenPatterns">
+  <div class="header">
+    <button class="back-btn" onclick="goBack('screenDaily')">←</button>
+    <div><h1>Symptom Patterns</h1></div>
+  </div>
+  <div class="patterns-body" id="patternsBody"></div>
+</div>
+
 <script>
+// ══ STATE ══
+let state = {
+  calType: 'lunar',      // 'lunar' or '28day'
+  eLevel: 'base',        // 'base','E+1'..'E+8'
+  pLevel: 'base',        // 'base','P-2','P-1','P+1','P+2'
+  day1: null,            // Date for 28-day Day 1
+  offset: 0,             // days from today for nav
+  symptoms: {},          // { 'YYYY-MM-DD': { list:[], libido:'', notes:'' } }
+  adjustFrom: null,      // date string from which adjustment applies
+  adjE: null,
+  adjP: null,
+};
+
+function saveState(){ try{localStorage.setItem('bhrt_state', JSON.stringify(state));}catch(e){} }
+function loadState(){
+  try{
+    const s = localStorage.getItem('bhrt_state');
+    if(s) state = Object.assign(state, JSON.parse(s));
+  }catch(e){}
+}
+
+// ══ FULL MOONS ══
 const FULL_MOONS = [
   new Date('2026-03-03'),new Date('2026-04-02'),new Date('2026-05-01'),new Date('2026-05-31'),
   new Date('2026-06-30'),new Date('2026-07-29'),new Date('2026-08-28'),new Date('2026-09-26'),
   new Date('2026-10-26'),new Date('2026-11-24'),new Date('2026-12-24'),new Date('2027-01-22'),
   new Date('2027-02-20'),new Date('2027-03-22'),new Date('2027-04-20'),new Date('2027-05-20'),
+  new Date('2027-06-19'),new Date('2027-07-18'),new Date('2027-08-17'),new Date('2027-09-15'),
 ];
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+// ══ DOSE LEVELS ══
+const E_LEVELS = ['base','E+1','E+2','E+3','E+4','E+5','E+6','E+7','E+8'];
+const P_LEVELS = ['P-2','P-1','base','P+1','P+2'];
 
-let offset = 0; // days from today
-
-function today() {
-  const t = new Date();
-  return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+function eOffset(level){ return level==='base'?0:parseInt(level.replace('E',''))||0; }
+function pOffset(level){
+  if(level==='base')return 0;
+  return parseInt(level.replace('P',''))||0;
 }
 
-function getDoses(dateObj) {
+// ══ LUNAR DOSE CALC ══
+function getLunarDoses(dateObj, eLevel, pLevel){
   const t = dateObj.getTime();
   let cs=null, ns=null;
   for(let i=0;i<FULL_MOONS.length;i++){
@@ -267,143 +503,378 @@ function getDoses(dateObj) {
   }
   if(!cs) return null;
   const elapsed = Math.round((t-cs.getTime())/86400000);
-  const cycleLength = ns ? Math.round((ns.getTime()-cs.getTime())/86400000) : 28;
+  const cl = ns ? Math.round((ns.getTime()-cs.getTime())/86400000) : 28;
 
-  // Day 12 = full moon (elapsed 0), days 12-28 run elapsed 0-16
-  // Filler days 1-11 = elapsed 17+ anchored to next full moon
-  let cycleDay, isFiller = false;
-  if (elapsed <= 16) {
-    cycleDay = elapsed + 12;
+  let cycleDay, isFiller=false;
+  if(elapsed<=16){ cycleDay=elapsed+12; }
+  else { const dtn=cl-elapsed; cycleDay=Math.max(1,12-dtn); isFiller=true; }
+
+  const eo = eOffset(eLevel), po = pOffset(pLevel);
+  let e=4, p=0;
+
+  if(isFiller){
+    if(cycleDay>=9)e=7+eo; else if(cycleDay>=6)e=6+eo; else e=4+eo;
   } else {
-    const daysToNext = cycleLength - elapsed;
-    cycleDay = Math.max(1, 12 - daysToNext);
-    isFiller = true;
+    if(cycleDay===12)     {e=8+eo;}
+    else if(cycleDay===13){e=2+eo;}
+    else if(cycleDay===14){e=2+eo;p=4+po;}
+    else if(cycleDay===15){e=3+eo;p=4+po;}
+    else if(cycleDay<=17) {e=3+eo;p=8+po;}
+    else if(cycleDay<=19) {e=4+eo;p=10+po;}
+    else if(cycleDay===20){e=4+eo;p=12+po;}
+    else if(cycleDay===21){e=4+eo;p=14+po;}
+    else if(cycleDay===22){e=4+eo;p=12+po;}
+    else if(cycleDay<=24) {e=4+eo;p=10+po;}
+    else if(cycleDay<=26) {e=4+eo;p=8+po;}
+    else if(cycleDay<=28) {e=4+eo;p=4+po;}
+    else                  {e=4+eo;}
   }
-
-  let eDose = 4, pDose = 0;
-  if (isFiller) {
-    if      (cycleDay >= 9) eDose = 7;
-    else if (cycleDay >= 6) eDose = 6;
-    else                    eDose = 4;
-  } else {
-    if      (cycleDay === 12) { eDose = 8; }
-    else if (cycleDay === 13) { eDose = 2; }
-    else if (cycleDay === 14) { eDose = 2; pDose = 4; }
-    else if (cycleDay === 15) { eDose = 3; pDose = 4; }
-    else if (cycleDay <= 17)  { eDose = 3; pDose = 8; }
-    else if (cycleDay <= 19)  { eDose = 4; pDose = 10; }
-    else if (cycleDay === 20) { eDose = 4; pDose = 12; }
-    else if (cycleDay === 21) { eDose = 4; pDose = 14; }
-    else if (cycleDay === 22) { eDose = 4; pDose = 12; }
-    else if (cycleDay <= 24)  { eDose = 4; pDose = 10; }
-    else if (cycleDay <= 26)  { eDose = 4; pDose = 8; }
-    else if (cycleDay <= 28)  { eDose = 4; pDose = 4; }
-  }
-
-  return {cycleDay, cycleLength, eDose, pDose, isFullMoonDay: elapsed===0, nextCycleStart: ns};
+  e=Math.max(0,e); p=Math.max(0,p);
+  return{cycleDay,cycleLength:cl,e,p,isFullMoon:elapsed===0,nextCycleStart:ns,isFiller};
 }
 
-function render() {
-  const td = today();
-  const viewDate = new Date(td);
-  viewDate.setDate(viewDate.getDate() + offset);
+// ══ 28-DAY DOSE CALC ══
+function get28Doses(dateObj, day1Date, eLevel, pLevel){
+  if(!day1Date) return null;
+  const elapsed = Math.round((dateObj.getTime()-day1Date.getTime())/86400000);
+  if(elapsed<0) return null;
+  const cycleDay = (elapsed % 28) + 1;
+  const eo = eOffset(eLevel), po = pOffset(pLevel);
 
-  const info = getDoses(viewDate);
-  const isToday = offset === 0;
+  let e=4+eo, p=0;
+  if(cycleDay<=5)       e=4+eo;
+  else if(cycleDay<=8)  e=6+eo;
+  else if(cycleDay<=11) e=7+eo;
+  else if(cycleDay===12)e=8+eo;
+  else if(cycleDay<=14) e=2+eo;
+  else if(cycleDay<=17) e=3+eo;
+  else                  e=4+eo;
 
-  // Reset card state
-  // Show/hide jump button
-  const jumpBtn = document.getElementById('jumpToday');
-  if (offset !== 0) { jumpBtn.classList.add('visible'); } else { jumpBtn.classList.remove('visible'); }
+  if(cycleDay<=15&&cycleDay>=14)      p=4+po;
+  else if(cycleDay<=17&&cycleDay>=16) p=8+po;
+  else if(cycleDay<=19&&cycleDay>=18) p=10+po;
+  else if(cycleDay===20)              p=12+po;
+  else if(cycleDay===21)              p=14+po;
+  else if(cycleDay===22)              p=12+po;
+  else if(cycleDay<=24&&cycleDay>=23) p=10+po;
+  else if(cycleDay<=26&&cycleDay>=25) p=8+po;
+  else if(cycleDay<=28&&cycleDay>=27) p=4+po;
 
-  const card = document.getElementById('card');
-  card.classList.remove('full-moon-day');
-  document.getElementById('moonPhaseLabel').textContent = 'Wiley Protocol';
+  e=Math.max(0,e); p=Math.max(0,p);
+  return{cycleDay,cycleLength:28,e,p,isFullMoon:false,nextCycleStart:null,isFiller:false};
+}
 
-  document.getElementById('dayOfWeek').textContent = DAYS[viewDate.getDay()];
+function getDoses(dateObj){
+  const eL = getEffectiveLevel('e', dateObj);
+  const pL = getEffectiveLevel('p', dateObj);
+  if(state.calType==='lunar') return getLunarDoses(dateObj, eL, pL);
+  const d1 = state.day1 ? new Date(state.day1) : null;
+  return get28Doses(dateObj, d1, eL, pL);
+}
 
-  const dateHTML = `${MONTHS[viewDate.getMonth()]} ${viewDate.getDate()}, ${viewDate.getFullYear()}${isToday ? ' <span class="today-badge">today</span>' : ''}`;
-  document.getElementById('fullDate').innerHTML = dateHTML;
-
-  if (!info) { document.getElementById('cycleDayLabel').textContent = 'out of range'; return; }
-
-  document.getElementById('cycleDayLabel').textContent = `Day ${info.cycleDay} of ${info.cycleLength}`;
-
-  if (info.isFullMoonDay) {
-    card.classList.add('full-moon-day');
-    document.getElementById('moonPhaseLabel').textContent = '🌕 Full Moon · Day 1';
-  }
-
-  const c = document.getElementById('dosesContainer');
-  c.innerHTML = `<div class="dose-row"><span class="hormone-label">Estradiol</span><span class="dose-dots"></span><span class="dose-value">${info.eDose}<span class="dose-unit">lines</span></span></div>`;
-  if (info.pDose > 0) {
-    c.innerHTML += `<div class="dose-row"><span class="hormone-label">Progesterone</span><span class="dose-dots"></span><span class="dose-value">${info.pDose}<span class="dose-unit">lines</span></span></div>`;
-  }
-
-  const nextMoonEl = document.getElementById('nextMoonInfo');
-  if (info.nextCycleStart) {
-    const nm = info.nextCycleStart;
-    const daysUntil = Math.round((nm.getTime()-td.getTime())/86400000);
-    if (daysUntil > 0) {
-      nextMoonEl.innerHTML = `Next full moon &nbsp;<span>${MONTHS[nm.getMonth()]} ${nm.getDate()}</span>&nbsp; · in ${daysUntil} day${daysUntil!==1?'s':''}`;
-    } else {
-      nextMoonEl.innerHTML = '';
+function getEffectiveLevel(hormone, dateObj){
+  if(state.adjustFrom){
+    const adjDate = new Date(state.adjustFrom);
+    if(dateObj.getTime() >= adjDate.getTime()){
+      if(hormone==='e' && state.adjE) return state.adjE;
+      if(hormone==='p' && state.adjP) return state.adjP;
     }
   }
+  return hormone==='e' ? state.eLevel : state.pLevel;
 }
 
-function jumpToday() { offset = 0; render(); }
-
-function shiftDay(dir) {
-  offset += dir;
-  render();
+// ══ SCREENS ══
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
 }
 
-function toggleTravel() {
-  document.getElementById('travelToggle').classList.toggle('open');
-  document.getElementById('travelForm').classList.toggle('visible');
+function goSetup(){ showScreen('screenSetup'); renderSetup(); }
+function goBack(id){ showScreen(id); if(id==='screenDaily') renderDaily(); }
+function goSymptoms(){ buildSymptomScreen(); showScreen('screenSymptoms'); }
+function goNotes(){ buildNotesScreen(); showScreen('screenNotes'); }
+function goTravel(){ showScreen('screenTravel'); document.getElementById('travelResult').classList.remove('visible'); }
+function goAdjust(){ buildAdjustScreen(); showScreen('screenAdjust'); }
+function goPatterns(){ buildPatterns(); showScreen('screenPatterns'); }
+function jumpToday(){ state.offset=0; renderDaily(); }
+function shiftDay(d){ state.offset+=d; renderDaily(); }
+
+// ══ SETUP ══
+function renderSetup(){
+  const eC = document.getElementById('eOpts');
+  eC.innerHTML = '';
+  E_LEVELS.forEach(l=>{
+    const b = document.createElement('button');
+    b.className = 'opt-btn' + (state.eLevel===l?' selected-e':'');
+    b.textContent = l==='base'?'Base':l;
+    b.onclick = ()=>selectE(l);
+    eC.appendChild(b);
+  });
+
+  const pC = document.getElementById('pOpts');
+  pC.innerHTML = '';
+  P_LEVELS.forEach(l=>{
+    const b = document.createElement('button');
+    b.className = 'opt-btn' + (state.pLevel===l?' selected-p':'');
+    b.textContent = l==='base'?'Base':l;
+    b.onclick = ()=>selectP(l);
+    pC.appendChild(b);
+  });
+
+  document.querySelectorAll('[data-cal]').forEach(b=>{
+    b.className = 'opt-btn' + (state.calType===b.dataset.cal?' selected-cal':'');
+  });
+
+  const picker = document.getElementById('day1Picker');
+  picker.classList.toggle('visible', state.calType==='28day');
+  if(state.day1) document.getElementById('day1Input').value = state.day1;
 }
 
-function calcTravel() {
-  const dv = document.getElementById('departDate').value;
-  const rv = document.getElementById('returnDate').value;
-  const resultEl = document.getElementById('travelResult');
-  const dosesEl = document.getElementById('travelDoses');
-  const labelEl = document.getElementById('travelDayCount');
-  dosesEl.innerHTML=''; resultEl.classList.remove('visible');
+function selectE(l){ state.eLevel=l; renderSetup(); }
+function selectP(l){ state.pLevel=l; renderSetup(); }
+function selectCal(t){
+  state.calType=t;
+  renderSetup();
+}
 
-  if(!dv||!rv){dosesEl.innerHTML='<div class="travel-error">Please enter both dates.</div>';resultEl.classList.add('visible');return;}
+function startApp(){
+  if(state.calType==='28day'){
+    const v = document.getElementById('day1Input').value;
+    if(!v){ alert('Please choose your Day 1 date.'); return; }
+    state.day1 = v;
+  }
+  state.offset=0;
+  saveState();
+  showScreen('screenDaily');
+  renderDaily();
+}
+
+// ══ DAILY RENDER ══
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS_W = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS_S = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function todayDate(){ const t=new Date(); return new Date(t.getFullYear(),t.getMonth(),t.getDate()); }
+function dateKey(d){ return d.toISOString().split('T')[0]; }
+
+function renderDaily(){
+  const td = todayDate();
+  const vd = new Date(td); vd.setDate(vd.getDate()+state.offset);
+  const info = getDoses(vd);
+
+  document.getElementById('headerTitle').textContent = state.calType==='lunar'?'Lunar BHRT':'28-Day BHRT';
+  const eL = getEffectiveLevel('e',vd), pL = getEffectiveLevel('p',vd);
+  document.getElementById('headerSub').textContent = (eL==='base'?'E Base':eL) + ' · ' + (pL==='base'?'P Base':pL);
+
+  document.getElementById('dateDow').textContent = DAYS_W[vd.getDay()];
+  document.getElementById('dateMain').textContent = MONTHS[vd.getMonth()] + ' ' + vd.getDate() + ', ' + vd.getFullYear();
+  document.getElementById('dateCycle').textContent = info ? 'Day ' + info.cycleDay + ' of ' + info.cycleLength : '';
+
+  const badge = document.getElementById('moonBadge');
+  badge.innerHTML = (info&&info.isFullMoon) ? '<div class="full-moon-badge">🌕 Full Moon · Day 12</div>' : '';
+
+  document.getElementById('eDisplay').textContent = info ? info.e : '—';
+  document.getElementById('eLevelLabel').textContent = eL==='base'?'Base level':eL;
+  document.getElementById('pLevelLabel').textContent = pL==='base'?'Base level':pL;
+
+  const pCard = document.getElementById('pCard');
+  if(info && info.p>0){
+    pCard.style.display='flex';
+    document.getElementById('pDisplay').textContent = info.p;
+  } else {
+    pCard.style.display='none';
+  }
+
+  document.getElementById('todayBtn').classList.toggle('visible', state.offset!==0);
+
+  // Next moon
+  const nmEl = document.getElementById('nextMoonInfo');
+  if(state.calType==='lunar' && info && info.nextCycleStart){
+    const nm = info.nextCycleStart;
+    const du = Math.round((nm.getTime()-td.getTime())/86400000);
+    if(du>0) nmEl.innerHTML = 'Next full moon: <span>'+MONTHS[nm.getMonth()]+' '+nm.getDate()+'</span> · in '+du+' day'+(du!==1?'s':'');
+    else nmEl.innerHTML='';
+  } else { nmEl.innerHTML=''; }
+}
+
+// ══ SYMPTOMS ══
+const SYMPTOM_LIST = [
+  'Anxiety','Bloating','Brain fog','Constipation','Cramps','Depression',
+  'Dry vagina','Headache','Heart palpitations','Hot flash','Incontinence',
+  'Insomnia','Joint pain','Night sweats','Sore breasts'
+];
+
+function currentViewDate(){
+  const td=todayDate(); const vd=new Date(td); vd.setDate(vd.getDate()+state.offset); return vd;
+}
+
+function buildSymptomScreen(){
+  const vd = currentViewDate();
+  const key = dateKey(vd);
+  const data = state.symptoms[key]||{list:[],libido:'',notes:''};
+  document.getElementById('symptomDateLabel').textContent = MONTHS_S[vd.getMonth()]+' '+vd.getDate()+', '+vd.getFullYear();
+
+  const grid = document.getElementById('symptomGrid');
+  grid.innerHTML='';
+
+  SYMPTOM_LIST.forEach(s=>{
+    const active = data.list.includes(s);
+    const div = document.createElement('div');
+    div.className = 'symptom-item'+(active?' active':'');
+    div.innerHTML = '<span>'+s+'</span><span class="check">'+(active?'✓':'')+'</span>';
+    div.onclick = ()=>toggleSymptom(s,div,key);
+    grid.appendChild(div);
+  });
+
+  // Libido
+  const libDiv = document.createElement('div');
+  libDiv.className = 'libido-toggle'+(data.libido==='low'?' active-low':data.libido==='high'?' active-high':'');
+  libDiv.id = 'libidoRow';
+  libDiv.innerHTML = `<span class="libido-label">Libido</span>
+    <div class="libido-opts">
+      <button class="lib-btn${data.libido==='low'?' active-low':''}" onclick="setLibido('low','${key}')">Low</button>
+      <button class="lib-btn${data.libido==='high'?' active-high':''}" onclick="setLibido('high','${key}')">High</button>
+      <button class="lib-btn" onclick="setLibido('','${key}')">—</button>
+    </div>`;
+  grid.appendChild(libDiv);
+}
+
+function toggleSymptom(s, div, key){
+  if(!state.symptoms[key]) state.symptoms[key]={list:[],libido:'',notes:''};
+  const list = state.symptoms[key].list;
+  const idx = list.indexOf(s);
+  if(idx>-1){ list.splice(idx,1); div.classList.remove('active'); div.querySelector('.check').textContent=''; }
+  else { list.push(s); div.classList.add('active'); div.querySelector('.check').textContent='✓'; }
+}
+
+function setLibido(val, key){
+  if(!state.symptoms[key]) state.symptoms[key]={list:[],libido:'',notes:''};
+  state.symptoms[key].libido = val;
+  buildSymptomScreen();
+}
+
+function saveSymptoms(){ saveState(); goBack('screenDaily'); }
+
+// ══ NOTES ══
+function buildNotesScreen(){
+  const vd = currentViewDate();
+  const key = dateKey(vd);
+  const data = state.symptoms[key]||{list:[],libido:'',notes:''};
+  document.getElementById('notesDateLabel').textContent = MONTHS_S[vd.getMonth()]+' '+vd.getDate()+', '+vd.getFullYear();
+  document.getElementById('notesArea').value = data.notes||'';
+}
+
+function saveNotes(){
+  const vd = currentViewDate();
+  const key = dateKey(vd);
+  if(!state.symptoms[key]) state.symptoms[key]={list:[],libido:'',notes:''};
+  state.symptoms[key].notes = document.getElementById('notesArea').value;
+  saveState();
+  goBack('screenDaily');
+}
+
+// ══ TRAVEL ══
+function calcTravel(){
+  const dv=document.getElementById('travelDepart').value;
+  const rv=document.getElementById('travelReturn').value;
+  if(!dv||!rv){alert('Please enter both dates.');return;}
   const [dy,dm,dd]=dv.split('-').map(Number);
   const [ry,rm,rd]=rv.split('-').map(Number);
-  const depart=new Date(dy,dm-1,dd), ret=new Date(ry,rm-1,rd);
-  if(ret<depart){dosesEl.innerHTML='<div class="travel-error">Return must be after departure.</div>';resultEl.classList.add('visible');return;}
-
-  let totalE=0, totalP=0, cur=new Date(depart);
+  const dep=new Date(dy,dm-1,dd), ret=new Date(ry,rm-1,rd);
+  if(ret<dep){alert('Return must be after departure.');return;}
+  let te=0,tp=0,cur=new Date(dep);
   while(cur<=ret){
     const info=getDoses(cur);
-    if(info){totalE+=info.eDose;totalP+=info.pDose;}
+    if(info){te+=info.e;tp+=info.p;}
     cur.setDate(cur.getDate()+1);
   }
-  const nd=Math.round((ret-depart)/86400000)+1;
-  labelEl.textContent=`${MONTHS_SHORT[depart.getMonth()]} ${depart.getDate()} – ${MONTHS_SHORT[ret.getMonth()]} ${ret.getDate()} · ${nd} day${nd!==1?'s':''}`;
-  dosesEl.innerHTML=`
-    <div class="travel-dose-row"><span class="hormone-label">Estradiol</span><span class="dose-dots"></span><span class="travel-dose-value">${totalE}<span class="dose-unit">lines total</span></span></div>
-    <div class="travel-dose-row"><span class="hormone-label">Progesterone</span><span class="dose-dots"></span><span class="travel-dose-value">${totalP>0?totalP+'<span class="dose-unit">lines total</span>':'<span style="font-size:13px;font-style:italic;color:var(--mid)">none needed</span>'}</span></div>`;
-  resultEl.classList.add('visible');
+  const nd=Math.round((ret-dep)/86400000)+1;
+  document.getElementById('travelLabel').textContent=MONTHS_S[dep.getMonth()]+' '+dep.getDate()+' – '+MONTHS_S[ret.getMonth()]+' '+ret.getDate()+' · '+nd+' day'+(nd!==1?'s':'');
+  document.getElementById('travelE').textContent=te;
+  document.getElementById('travelP').textContent=tp>0?tp:'None';
+  document.getElementById('travelResult').classList.add('visible');
 }
 
-// Stars
-(function(){
-  const c=document.getElementById('stars');
-  for(let i=0;i<80;i++){
-    const s=document.createElement('div'); s.className='star';
-    const sz=Math.random()*2+0.5, op=Math.random()*0.6+0.1;
-    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--o:${op};animation-delay:${(Math.random()*4).toFixed(1)}s;`;
-    c.appendChild(s);
-  }
-})();
+// ══ ADJUST ══
+function buildAdjustScreen(){
+  const eC=document.getElementById('adjEOpts'); eC.innerHTML='';
+  E_LEVELS.forEach(l=>{
+    const b=document.createElement('button');
+    const cur=state.adjE||state.eLevel;
+    b.className='adj-btn'+(cur===l?' selected-e':'');
+    b.textContent=l==='base'?'Base':l;
+    b.onclick=()=>{ state.adjE=l; buildAdjustScreen(); };
+    eC.appendChild(b);
+  });
+  const pC=document.getElementById('adjPOpts'); pC.innerHTML='';
+  P_LEVELS.forEach(l=>{
+    const b=document.createElement('button');
+    const cur=state.adjP||state.pLevel;
+    b.className='adj-btn'+(cur===l?' selected-p':'');
+    b.textContent=l==='base'?'Base':l;
+    b.onclick=()=>{ state.adjP=l; buildAdjustScreen(); };
+    pC.appendChild(b);
+  });
+}
 
-render();
+function applyAdjust(){
+  const vd=currentViewDate();
+  state.adjustFrom=dateKey(vd);
+  saveState();
+  goBack('screenDaily');
+}
+
+// ══ PATTERNS ══
+function buildPatterns(){
+  const body=document.getElementById('patternsBody');
+  body.innerHTML='';
+  const counts={};
+  Object.entries(state.symptoms).forEach(([key,data])=>{
+    const d=new Date(key);
+    const info=getDoses(d);
+    if(!info)return;
+    const cd=info.cycleDay;
+    data.list.forEach(s=>{
+      if(!counts[s])counts[s]=[];
+      counts[s].push(cd);
+    });
+    if(data.libido){
+      const k='Libido '+data.libido;
+      if(!counts[k])counts[k]=[];
+      counts[k].push(cd);
+    }
+  });
+
+  if(Object.keys(counts).length===0){
+    body.innerHTML='<div class="no-patterns">No symptom data yet. Start logging symptoms daily to see patterns here.</div>';
+    return;
+  }
+
+  Object.entries(counts).sort((a,b)=>b[1].length-a[1].length).forEach(([sym,days])=>{
+    if(days.length<2)return;
+    const sorted=[...new Set(days)].sort((a,b)=>a-b);
+    const card=document.createElement('div');
+    card.className='pattern-card';
+    card.innerHTML='<div class="pattern-symptom">'+sym+'</div><div class="pattern-days">Logged on cycle days: '+sorted.join(', ')+' ('+days.length+' times)</div>';
+    body.appendChild(card);
+  });
+
+  if(body.children.length===0){
+    body.innerHTML='<div class="no-patterns">Log symptoms on at least 2 days to see patterns.</div>';
+  }
+}
+
+// ══ INIT ══
+loadState();
+if(state.calType && (state.calType==='lunar'||(state.calType==='28day'&&state.day1))){
+  renderSetup();
+  showScreen('screenDaily');
+  renderDaily();
+} else {
+  renderSetup();
+  showScreen('screenSetup');
+}
 </script>
 </body>
 </html>
