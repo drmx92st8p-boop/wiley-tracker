@@ -267,23 +267,38 @@ function getDoses(dateObj) {
   }
   if(!cs) return null;
   const elapsed = Math.round((t-cs.getTime())/86400000);
-  const cycleDay = elapsed+1;
   const cycleLength = ns ? Math.round((ns.getTime()-cs.getTime())/86400000) : 28;
-  const daysToNext = cycleLength - cycleDay;
 
-  // P: last 15 days of cycle
-  const pMap = {14:4,13:4,12:8,11:8,10:10,9:10,8:12,7:14,6:12,5:10,4:10,3:8,2:8,1:4,0:4};
-  const pDose = pMap.hasOwnProperty(daysToNext) ? pMap[daysToNext] : 0;
+  // Day 12 = full moon (elapsed 0), days 12-28 run elapsed 0-16
+  // Filler days 1-11 = elapsed 17+ anchored to next full moon
+  let cycleDay, isFiller = false;
+  if (elapsed <= 16) {
+    cycleDay = elapsed + 12;
+  } else {
+    const daysToNext = cycleLength - elapsed;
+    cycleDay = Math.max(1, 12 - daysToNext);
+    isFiller = true;
+  }
 
-  // E: anchored backwards from next full moon
-  let eDose;
-  if      (daysToNext >= 23) eDose = 4;
-  else if (daysToNext >= 20) eDose = 6;
-  else if (daysToNext >= 17) eDose = 7;
-  else if (daysToNext === 16) eDose = 8;
-  else if (daysToNext >= 14) eDose = 2;
-  else if (daysToNext >= 11) eDose = 3;
-  else                       eDose = 4;
+  let eDose = 4, pDose = 0;
+  if (isFiller) {
+    if      (cycleDay >= 9) eDose = 7;
+    else if (cycleDay >= 6) eDose = 6;
+    else                    eDose = 4;
+  } else {
+    if      (cycleDay === 12) { eDose = 8; }
+    else if (cycleDay === 13) { eDose = 2; }
+    else if (cycleDay === 14) { eDose = 2; pDose = 4; }
+    else if (cycleDay === 15) { eDose = 3; pDose = 4; }
+    else if (cycleDay <= 17)  { eDose = 3; pDose = 8; }
+    else if (cycleDay <= 19)  { eDose = 4; pDose = 10; }
+    else if (cycleDay === 20) { eDose = 4; pDose = 12; }
+    else if (cycleDay === 21) { eDose = 4; pDose = 14; }
+    else if (cycleDay === 22) { eDose = 4; pDose = 12; }
+    else if (cycleDay <= 24)  { eDose = 4; pDose = 10; }
+    else if (cycleDay <= 26)  { eDose = 4; pDose = 8; }
+    else if (cycleDay <= 28)  { eDose = 4; pDose = 4; }
+  }
 
   return {cycleDay, cycleLength, eDose, pDose, isFullMoonDay: elapsed===0, nextCycleStart: ns};
 }
