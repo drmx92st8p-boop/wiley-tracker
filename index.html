@@ -1019,14 +1019,35 @@ function togDose(field, el, key){
 }
 
 // ══ INIT ══
-load();
-if(S.setup){
-  // Restore setup pills
-  if(S.calType){
-    document.querySelectorAll('.cal-pill').forEach(p=>{
-      if(p.dataset.cal===S.calType)p.classList.add('selected');
+function initApp(){
+  load();
+  if(S.setup){
+    if(S.calType){
+      document.querySelectorAll('.cal-pill').forEach(p=>{
+        if(p.dataset.cal===S.calType)p.classList.add('selected');
+      });
+      setupCal=S.calType;
+    }
+    document.querySelectorAll('#eSetupGroup .pill').forEach(p=>{
+      p.classList.toggle('selected', parseInt(p.dataset.lv)===S.eLevel);
     });
-    setupCal=S.calType;
+    document.querySelectorAll('#pSetupGroup .pill').forEach(p=>{
+      p.classList.toggle('selected', parseInt(p.dataset.lv)===S.pLevel);
+    });
+    showMain();
+  } else {
+    document.getElementById('setupScreen').classList.add('active');
   }
-  document.querySelectorAll('#eSetupGroup .pill').forEach(p=>{
-    if(parseInt
+}
+
+// Check auth on load
+try {
+  if(localStorage.getItem('ptAuth')==='1'){
+    document.getElementById('pwScreen').classList.remove('active');
+    initApp();
+  }
+} catch(e){ initApp(); }
+
+</script>
+</body>
+</html>
