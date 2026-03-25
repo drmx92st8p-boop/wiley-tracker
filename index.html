@@ -237,12 +237,63 @@ html,body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg2)
   padding:12px; background:var(--bg2); border-radius:8px;
 }
 .support-link { color:#2a6496; font-weight:600; }
+/* ── PASSWORD ── */
+#pwScreen {
+  background: linear-gradient(160deg,#f0faf4 0%,#ede8f5 100%);
+  align-items:center; justify-content:center;
+}
+.pw-card {
+  background:white; border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:40px 28px; width:100%; max-width:380px; text-align:center;
+}
+.pw-icon { font-size:48px; margin-bottom:12px; }
+.pw-title { font-family:'DM Serif Display',serif; font-size:24px; margin-bottom:6px; }
+.pw-sub { font-size:14px; color:var(--text-light); margin-bottom:24px; }
+.pw-input {
+  width:100%; padding:14px; border:1.5px solid var(--border); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:18px; text-align:center; letter-spacing:.2em;
+  color:var(--text); outline:none; margin-bottom:14px;
+}
+.pw-input:focus { border-color:var(--e); }
+
+/* ── AM/PM TRACKER ── */
+.dose-check-row {
+  display:flex; gap:10px; margin-bottom:12px;
+}
+.dose-check {
+  flex:1; padding:14px 8px; border-radius:var(--radius); border:2px solid;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700;
+  cursor:pointer; text-align:center; transition:all .15s; background:white;
+}
+.dose-check.e-check { border-color:var(--e-border); color:var(--e); }
+.dose-check.e-check.done { background:var(--e); color:white; border-color:var(--e); }
+.dose-check.p-check { border-color:var(--p-border); color:var(--p); }
+.dose-check.p-check.done { background:var(--p); color:white; border-color:var(--p); }
+.dose-check .check-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:3px; }
+.dose-check .check-time { font-size:18px; }
+.dose-check .check-mark { font-size:20px; display:none; }
+.dose-check.done .check-time { display:none; }
+.dose-check.done .check-mark { display:block; }
+
 </style>
 </head>
 <body>
 
+<!-- ══ PASSWORD ══ -->
+<div id="pwScreen" class="screen active">
+  <div class="pw-card">
+    <div class="pw-icon">🔐</div>
+    <div class="pw-title">Protocol Tracker</div>
+    <div class="pw-sub">Enter your access code to continue</div>
+    <input type="password" id="pwInput" class="pw-input" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="start-btn" onclick="checkPw()">Continue</button>
+    <div id="pwErr" class="err" style="margin-top:10px"></div>
+  </div>
+</div>
+
 <!-- ══ SETUP ══ -->
-<div id="setupScreen" class="screen active">
+<div id="setupScreen" class="screen">
   <div class="setup-card">
     <div class="app-title">Protocol Tracker</div>
     <div class="app-subtitle">Cyclical Bioidentical Hormone Therapy</div>
@@ -316,6 +367,7 @@ html,body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg2)
     <button class="back-btn" id="backBtn" onclick="jumpToday()">↩ Back to Today</button>
     <div class="fm-badge" id="fmBadge">🌕 Full Moon</div>
     <div id="doseArea"></div>
+    <div id="doseChecks" class="dose-check-row" style="display:none"></div>
     <div class="next-moon" id="nextMoon" style="display:none"></div>
     <div class="action-grid">
       <button class="act-btn" onclick="openSymptoms()"><span class="ai">📋</span>Log Symptoms</button>
@@ -474,8 +526,8 @@ html,body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg2)
       <div><div class="set-lbl">Progesterone</div><div class="set-sub" id="setPLbl">—</div></div>
     </div>
     <div class="set-row" style="border:none">
-      <div><div class="set-lbl">Support & Feedback</div><div class="set-sub">protocolsupport@icloud.com</div></div>
-      <a href="mailto:protocolsupport@icloud.com?subject=Protocol%20Tracker%20Feedback" style="text-decoration:none">
+      <div><div class="set-lbl">Support & Feedback</div><div class="set-sub"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cabab8a5bea5a9a5a6b9bfbabaa5b8be8aa3a9a6a5bfaee4a9a5a7">[email&#160;protected]</a></div></div>
+      <a href="/cdn-cgi/l/email-protection#8ffffde0fbe0ece0e3fcfaffffe0fdfbcfe6ece3e0faeba1ece0e2b0fcfaede5eaecfbb2dffde0fbe0ece0e3aabdbfdbfdeeece4eafdaabdbfc9eaeaebedeeece4" style="text-decoration:none">
         <button class="sm-btn">Email</button>
       </a>
     </div>
@@ -485,7 +537,7 @@ html,body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg2)
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ══ FULL MOON DATES ══
 const FM = [
   new Date('2026-03-03'),new Date('2026-04-02'),new Date('2026-05-01'),new Date('2026-05-31'),
@@ -515,6 +567,7 @@ let S = {
   pAdj: null,
   symptoms: {},
   notes: {},
+  doseLog: {},
 };
 let offset = 0;
 let adjE = 0, adjP = 0;
@@ -672,6 +725,8 @@ function render(){
       da.innerHTML+=`<div class="dose-card pc"><div><div class="dose-label">Progesterone</div><div class="dose-sub">${lvLabel('p',S.pLevel)}</div></div><div style="text-align:right"><div class="dose-num">${info.pDose}</div><div class="dose-unit">lines</div></div></div>`;
     }
   }
+
+  renderDoseChecks(info, vd);
 
   const nm=document.getElementById('nextMoon');
   if(S.calType==='lunar'&&info&&info.nextFM){
@@ -898,6 +953,71 @@ function openOL(id){document.getElementById(id).classList.add('vis');}
 function closeOL(id){document.getElementById(id).classList.remove('vis');}
 function bgClose(e,id){if(e.target.classList.contains('overlay'))closeOL(id);}
 
+
+// ══ PASSWORD ══
+const BETA_PW = 'protocol2026';
+function checkPw(){
+  const v=document.getElementById('pwInput').value.trim();
+  if(v===BETA_PW){
+    try{localStorage.setItem('ptAuth','1');}catch(e){}
+    document.getElementById('pwScreen').classList.remove('active');
+    initApp();
+  } else {
+    document.getElementById('pwErr').textContent='Incorrect access code. Please try again.';
+    document.getElementById('pwInput').value='';
+  }
+}
+
+// ══ AM/PM TRACKING ══
+function renderDoseChecks(info, vd){
+  const dc=document.getElementById('doseChecks');
+  if(!info){dc.style.display='none';return;}
+  dc.style.display='flex';
+  const key=dk(vd);
+  const saved=S.doseLog&&S.doseLog[key]?S.doseLog[key]:{eAM:false,ePM:false,pAM:false,pPM:false};
+
+  let html='';
+  // E AM
+  html+=`<button class="dose-check e-check${saved.eAM?' done':''}" onclick="togDose('eAM',this,'${key}')">
+    <span class="check-label" style="color:${saved.eAM?'white':''};opacity:${saved.eAM?'0.8':'1'}">Estradiol</span>
+    <span class="check-time">AM</span>
+    <span class="check-mark">✓ AM</span>
+  </button>`;
+  // E PM
+  html+=`<button class="dose-check e-check${saved.ePM?' done':''}" onclick="togDose('ePM',this,'${key}')">
+    <span class="check-label" style="color:${saved.ePM?'white':''};opacity:${saved.ePM?'0.8':'1'}">Estradiol</span>
+    <span class="check-time">PM</span>
+    <span class="check-mark">✓ PM</span>
+  </button>`;
+
+  if(info.pDose>0){
+    // P AM
+    html+=`<button class="dose-check p-check${saved.pAM?' done':''}" onclick="togDose('pAM',this,'${key}')">
+      <span class="check-label" style="color:${saved.pAM?'white':''};opacity:${saved.pAM?'0.8':'1'}">Progest.</span>
+      <span class="check-time">AM</span>
+      <span class="check-mark">✓ AM</span>
+    </button>`;
+    // P PM
+    html+=`<button class="dose-check p-check${saved.pPM?' done':''}" onclick="togDose('pPM',this,'${key}')">
+      <span class="check-label" style="color:${saved.pPM?'white':''};opacity:${saved.pPM?'0.8':'1'}">Progest.</span>
+      <span class="check-time">PM</span>
+      <span class="check-mark">✓ PM</span>
+    </button>`;
+  }
+  dc.innerHTML=html;
+}
+
+function togDose(field, el, key){
+  if(!S.doseLog) S.doseLog={};
+  if(!S.doseLog[key]) S.doseLog[key]={eAM:false,ePM:false,pAM:false,pPM:false};
+  S.doseLog[key][field]=!S.doseLog[key][field];
+  save();
+  // Re-render checks
+  const td2=tod(); const vd2=new Date(td2); vd2.setDate(vd2.getDate()+offset);
+  const info2=getDoses(vd2);
+  renderDoseChecks(info2,vd2);
+}
+
 // ══ INIT ══
 load();
 if(S.setup){
@@ -909,15 +1029,4 @@ if(S.setup){
     setupCal=S.calType;
   }
   document.querySelectorAll('#eSetupGroup .pill').forEach(p=>{
-    if(parseInt(p.dataset.lv)===S.eLevel)p.classList.add('selected');
-    else p.classList.remove('selected');
-  });
-  document.querySelectorAll('#pSetupGroup .pill').forEach(p=>{
-    if(parseInt(p.dataset.lv)===S.pLevel)p.classList.add('selected');
-    else p.classList.remove('selected');
-  });
-  showMain();
-}
-</script>
-</body>
-</html>
+    if(parseInt
