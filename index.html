@@ -237,7 +237,24 @@ html,body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg2)
   padding:12px; background:var(--bg2); border-radius:8px;
 }
 .support-link { color:#2a6496; font-weight:600; }
-
+/* ── PASSWORD ── */
+#pwScreen {
+  background: linear-gradient(160deg,#f0faf4 0%,#ede8f5 100%);
+  align-items:center; justify-content:center;
+}
+.pw-card {
+  background:white; border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:40px 28px; width:100%; max-width:380px; text-align:center;
+}
+.pw-icon { font-size:48px; margin-bottom:12px; }
+.pw-title { font-family:'DM Serif Display',serif; font-size:24px; margin-bottom:6px; }
+.pw-sub { font-size:14px; color:var(--text-light); margin-bottom:24px; }
+.pw-input {
+  width:100%; padding:14px; border:1.5px solid var(--border); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:18px; text-align:center; letter-spacing:.2em;
+  color:var(--text); outline:none; margin-bottom:14px;
+}
+.pw-input:focus { border-color:var(--e); }
 
 /* ── AM/PM TRACKER ── */
 .dose-check-row {
@@ -261,6 +278,19 @@ html,body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg2)
 </style>
 </head>
 <body>
+
+<!-- ══ PASSWORD ══ -->
+<div id="pwScreen" class="screen active">
+  <div class="pw-card">
+    <div class="pw-icon">🔐</div>
+    <div class="pw-title">Protocol Tracker</div>
+    <div class="pw-sub">Enter your access code to continue</div>
+    <input type="password" id="pwInput" class="pw-input" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="start-btn" onclick="checkPw()">Continue</button>
+    <div id="pwErr" class="err" style="margin-top:10px"></div>
+  </div>
+</div>
 
 <!-- ══ SETUP ══ -->
 <div id="setupScreen" class="screen">
@@ -952,6 +982,20 @@ function closeOL(id){document.getElementById(id).classList.remove('vis');}
 function bgClose(e,id){if(e.target.classList.contains('overlay'))closeOL(id);}
 
 
+// ══ PASSWORD ══
+const BETA_PW = 'protocol2026';
+function checkPw(){
+  const v=document.getElementById('pwInput').value.trim();
+  if(v===BETA_PW){
+    try{localStorage.setItem('ptAuth','1');}catch(e){}
+    document.getElementById('pwScreen').classList.remove('active');
+    initApp();
+  } else {
+    document.getElementById('pwErr').textContent='Incorrect access code. Please try again.';
+    document.getElementById('pwInput').value='';
+  }
+}
+
 // ══ AM/PM TRACKING ══
 function renderDoseChecks(info, vd){
   const dc=document.getElementById('doseChecks');
@@ -1024,4 +1068,9 @@ function initApp(){
   }
 }
 
-// Check auth o
+// ── INIT ──
+initApp();
+
+</script>
+</body>
+</html>
